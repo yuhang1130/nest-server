@@ -18,7 +18,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # 安装Pm2
-RUN npm config set registry https://registry.npm.taobao.org && \
+RUN npm config set registry https://registry.npmmirror.com && \
 	npm install pm2@5.3.0 -g
 
 #install
