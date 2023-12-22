@@ -1,0 +1,62 @@
+version: "1.0"
+
+services:
+  # docker容器启动的redis默认是没有redis.conf的配置文件，所以用docker启动redis之前，需要先去官网下载redis.conf的配置文件
+  redis_server: # 服务名称
+    image: redis:7.0 # 使用官方镜像
+    container_name: redis_container # 容器名称
+    ports:
+      - "6379:6379" # 本机端口:容器端口
+    volumes:
+      - redis_data:/data # 数据卷，持久化Redis数据
+    restart: always # 自动重启
+    environment:
+      - TZ=Asia/Shanghai  # 解决容器 时区的问题
+
+  mysql_server: # 服务名称
+    image: mysql:8.0 # 使用官方镜像
+    container_name: mysql_container
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql123
+      - MYSQL_DATABASE=hh
+      - MYSQL_USER=mysqlName
+      - MYSQL_PASSWORD=mysql123
+      # 设置默认的身份验证插件为 mysql_native_password
+      - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
+    ports:
+      - "3306:3306" # 本机端口:容器端口
+    volumes:
+      - mysql_data:/var/lib/mysql # 数据卷，持久化MySQL数据
+    restart: always
+    # 修改mysql8.x的加密身份连接方式(caching_sha2_password),兼容许多旧的连接工具不支持
+#    command: --default-authentication-plugin=mysql_native_password
+
+  nest_server: # nestjs服务
+    container_name: nest_container
+    depends_on: # 依赖于redis和mysql，在启动本服务之前会先启动依赖的服务
+      - mysql_server
+      - redis_server
+    ports:
+      - "9090:9090"
+    build: # 根据Dockerfile构建镜像
+      context: ./
+      dockerfile: Dockerfile
+    restart: on-failure
+    environment:
+      - DEPLOY_ENV=local
+      - PORT=9090
+      - JWT_SECRET=a77xkDuRx@myydrkT7EXvdCjLnWcUsY*JY4BJbPPR
+      - REDIS_HOST=redis_container # 通过容器名去访问
+      - REDIS_PORT=6379
+      - REDIS_PWD=
+      - REDIS_DB=0
+      - MYSQL_HOST=mysql_container # 通过容器名去访问
+      - MYSQL_PORT=3306
+      - MYSQL_USER=mysqlName
+      - MYSQL_PWD=mysql123
+      - MYSQL_DB=hh
+
+# 定义数据卷
+volumes:
+  mysql_data: # MySQL数据卷
+  redis_data: # Redis数据卷
