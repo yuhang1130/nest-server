@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto, LoginResultDto, LoginUserDto, PartialUser, SessionDto } from './dto/create-user.dto';
-import { ConfigService } from '@nestjs/config';
 import { UserEntity } from './entities/user.entity';
 import { CustomException } from '../../exceptions/custom.exception';
 import { ErrorCode } from '../../constants/errorCode-constant';
@@ -8,17 +7,19 @@ import * as bcrypt from 'bcryptjs';
 import * as _ from 'lodash';
 import { Mysql } from '../../database/mysql';
 import { ENTITY_STATUS } from '../../constants/entities-constant';
-import { AlsGetRequest, AlsGetUserSession } from '../../async-storage/async-storage';
+import { AlsGetRequest, AlsGetRequestIp, AlsGetUserSession } from '../../async-storage/async-storage';
 import { AuthService } from '../../auth/auth.service';
 import { UserNamespace } from '../../constants/user-constant';
+import * as svgCaptcha from 'svg-captcha';
+import { RedisSdk } from '../../database/redis';
 
 @Injectable()
 export class UserService {
 	logger = new Logger(UserService.name);
 	constructor(
-		readonly configService: ConfigService,
 		readonly auth: AuthService,
 		readonly mysql: Mysql,
+		readonly redisSdk: RedisSdk,
 	) {}
 
 	async register(data: CreateUserDto): Promise<UserEntity> {
@@ -83,24 +84,25 @@ export class UserService {
 		});
 	}
 
-	async create(data: CreateUserDto): Promise<boolean> {
-
-		return true;
-	}
-
-	findAll() {
-		return `This action returns all user`;
-	}
-
 	async info(): Promise<PartialUser> {
 		return AlsGetUserSession().User;
 	}
 
-	update(data: any) {
-		return `This action updates  user`;
-	}
-
-	remove(id: number) {
-		return `This action removes a #${id} user`;
+	// todo...针对ip加锁，限制频率
+	async captcha() {
+		const captcha = svgCaptcha.create({
+			size: 4, // 个数
+			height: 50,
+			ignoreChars: '0o1i', // 验证码字符中排除 0o1i
+			color: true, // 字体颜色是否多变
+			noise: 2, // 干扰线几条
+			background: '#cc9966', // 背景色
+		});
+		const ip = AlsGetRequestIp();
+		const redisKey = `ip: ${ip}`;
+		console.log('redisKey------', redisKey);
+		await this.redisSdk.SetCaptcha(redisKey, captcha.text, { ttl: 300 });
+		console.log('captcha-------', captcha.text);
+		return captcha.data;
 	}
 }

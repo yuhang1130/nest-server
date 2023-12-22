@@ -7,4 +7,5 @@ export enum RedisSdkKey {
 	IdCounter = `system:IdC:`,
 	SMSCodePrefix = `business:verify:code:`,
 	TokenCachePrefix = 'business:token:',
+	CaptchaPrefix = `captcha:`,
 }

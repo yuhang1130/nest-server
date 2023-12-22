@@ -3,6 +3,10 @@ import { Redis } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { RedisSdkKey } from '../constants/redis-key';
 
+type DelInterface = (key: string) => Promise<number>;
+type SetInterface = (key: string, value: string, opts: { ttl?: number; reset?: boolean }) => Promise<string | number>;
+type GetInterface = (key: string) => Promise<string | null>;
+
 @Injectable()
 export class RedisSdk implements BeforeApplicationShutdown {
 	logger = new Logger(RedisSdk.name);
@@ -109,7 +113,35 @@ export class RedisSdk implements BeforeApplicationShutdown {
 		return this.client.del(key);
 	}
 
+	private async Set(
+		prefix: string,
+		key: string,
+		v: string,
+		opts: { ttl: number; reset?: boolean },
+	): Promise<string | number> {
+		const k = prefix + key;
+		if (opts?.reset) {
+			return this.client.del(k);
+		}
+
+		return this.client.set(k, v, 'EX', Math.round(opts?.ttl) || 24 * 3600);
+	}
+
+	private async Del(prefix: string, key: string): Promise<number> {
+		const k = prefix + key;
+		return this.client.del(k);
+	}
+
+	private async Get(prefix: string, key: string): Promise<string|null> {
+		const k = prefix + key;
+		return this.client.get(k);
+	}
+
 	private async expire(key: string, ttl: number): Promise<number> {
 		return this.client.expire(key, ttl);
 	}
+
+	SetCaptcha: SetInterface = this.Set.bind(this, RedisSdkKey.CaptchaPrefix);
+	GetCaptcha: GetInterface = this.Get.bind(this, RedisSdkKey.CaptchaPrefix);
+	DelCaptcha: DelInterface = this.Del.bind(this, RedisSdkKey.CaptchaPrefix);
 }

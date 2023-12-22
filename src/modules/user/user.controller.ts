@@ -1,4 +1,4 @@
-import { Controller, Post, Body, SetMetadata, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, SetMetadata, UseGuards, Res, Get } from '@nestjs/common';
 import { Response } from 'express';
 import { UserService } from './user.service';
 import { CreateUserDto, LoginResultDto, LoginUserDto, PartialUser, SessionDto } from './dto/create-user.dto';
@@ -37,13 +37,6 @@ export class UserController {
 		return true;
 	}
 
-	@SetMetadata(IsAdmin, true)
-	@UseGuards(AuthGuard)
-	@Post('create')
-	async create(@Body() data: CreateUserDto): Promise<boolean> {
-		return await this.userService.create(data);
-	}
-
 	// @SetMetadata(IsAdmin, true)
 	@UseGuards(AuthGuard)
 	@Post('info')
@@ -51,17 +44,16 @@ export class UserController {
 		return await this.userService.info();
 	}
 
-	@SetMetadata(IsAdmin, true)
-	@UseGuards(AuthGuard)
-	@Post('update')
-	update(@Body() data: UpdateUserDto) {
-		return this.userService.update(data);
+	@Get('captcha')
+	async captcha(@Res() res: Response) {
+		const captcha_data = await this.userService.captcha();
+		res.end(
+			JSON.stringify({
+				data: captcha_data,
+				code: 0,
+			}),
+		);
+		return true;
 	}
 
-	@SetMetadata(IsAdmin, true)
-	@UseGuards(AuthGuard)
-	@Post('delete')
-	remove(@Body() data: any) {
-		return this.userService.remove(data);
-	}
 }

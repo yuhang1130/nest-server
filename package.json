@@ -41,6 +41,7 @@
     "nanoid": "^3.3.6",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "svg-captcha": "^1.4.0",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {

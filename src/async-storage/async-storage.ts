@@ -34,3 +34,13 @@ export const AlsGetUserSession = (): SessionDto => {
 	const config = ASLStore.getStore();
 	return config.request.session[UserNamespace];
 };
+
+export const AlsSetRequestIp = (ip: string): ALSConfig => {
+	const config = ASLStore.getStore();
+	return _.set(config, 'requestIp', ip);
+};
+
+export const AlsGetRequestIp = (): string => {
+	const config = ASLStore.getStore();
+	return _.get(config, 'requestIp');
+};
