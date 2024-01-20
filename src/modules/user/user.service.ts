@@ -7,7 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import * as _ from 'lodash';
 import { Mysql } from '../../database/mysql';
 import { ENTITY_STATUS } from '../../constants/entities-constant';
-import { AlsGetRequest, AlsGetRequestIp, AlsGetUserSession } from '../../async-storage/async-storage';
+import { AlsGetRequest, AlsGetUserSession } from '../../async-storage/async-storage';
 import { AuthService } from '../../auth/auth.service';
 import { UserNamespace } from '../../constants/user-constant';
 import * as svgCaptcha from 'svg-captcha';
@@ -23,6 +23,7 @@ export class UserService {
 	) {}
 
 	async register(data: CreateUserDto): Promise<UserEntity> {
+		data.user_name = data.user_name.trim();
 		const existUser = await this.getUserByName(data.user_name);
 		if (existUser) {
 			throw new CustomException(ErrorCode.UserExisted);
@@ -38,6 +39,16 @@ export class UserService {
 	}
 
 	async login(data: LoginUserDto): Promise<LoginResultDto> {
+		const sidKey = `sid: ${data.sid}`;
+		const captchaText = await this.redisSdk.GetCaptcha(sidKey);
+		if (!captchaText) {
+			throw new CustomException(ErrorCode.CaptchaInvalid);
+		}
+
+		if (captchaText.toLowerCase() !== data.code.toLowerCase()) {
+			throw new CustomException(ErrorCode.CaptchaError);
+		}
+
 		const existUser = await this.getUserByName(data.user_name);
 		if (!existUser) {
 			throw new CustomException(ErrorCode.UserNotExist);
@@ -56,14 +67,16 @@ export class UserService {
 			User: {
 				..._.pick(existUser, ['user_name', 'is_admin', 'phone', 'email']),
 			},
-			Rights: [],
+			Rights: ['test', 'test1'],
 		};
 		AlsGetRequest().session['data'] = UserSession;
 		AlsGetRequest().session.save();
 
 		const result: LoginResultDto = new LoginResultDto();
-		result.token = this.auth.signIn({ id: AlsGetRequest().sessionID });
-
+		const token = this.auth.signIn({ id: AlsGetRequest().sessionID });
+		result['data'] = {
+			token,
+		};
 		return result;
 	}
 
@@ -89,7 +102,7 @@ export class UserService {
 	}
 
 	// todo...针对ip加锁，限制频率
-	async captcha() {
+	async captcha(data: { sid: string }) {
 		const captcha = svgCaptcha.create({
 			size: 4, // 个数
 			height: 50,
@@ -98,11 +111,8 @@ export class UserService {
 			noise: 2, // 干扰线几条
 			background: '#cc9966', // 背景色
 		});
-		const ip = AlsGetRequestIp();
-		const redisKey = `ip: ${ip}`;
-		console.log('redisKey------', redisKey);
+		const redisKey = `sid: ${data.sid}`;
 		await this.redisSdk.SetCaptcha(redisKey, captcha.text, { ttl: 300 });
-		console.log('captcha-------', captcha.text);
 		return captcha.data;
 	}
 }

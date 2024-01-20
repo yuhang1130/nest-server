@@ -9,7 +9,7 @@ services:
       - "6379:6379" # 本机端口:容器端口
     volumes:
       - redis_data:/data # 数据卷，持久化Redis数据
-    restart: always # 自动重启
+    restart: on-failure # 自动重启
     environment:
       - TZ=Asia/Shanghai  # 解决容器 时区的问题
 
@@ -27,7 +27,7 @@ services:
       - "3306:3306" # 本机端口:容器端口
     volumes:
       - mysql_data:/var/lib/mysql # 数据卷，持久化MySQL数据
-    restart: always
+    restart: on-failure
     # 修改mysql8.x的加密身份连接方式(caching_sha2_password),兼容许多旧的连接工具不支持
 #    command: --default-authentication-plugin=mysql_native_password
 

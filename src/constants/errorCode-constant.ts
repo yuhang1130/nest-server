@@ -15,6 +15,8 @@ export enum ErrorCode {
 	UserNotExistWithId,
 	UserUnavailable,
 	UserOrPsw,
+	CaptchaInvalid,
+	CaptchaError,
 }
 
 export const ErrorMessage = {
@@ -33,4 +35,6 @@ export const ErrorMessage = {
 	[ErrorCode.UserNotExistWithId]: '该账号不存在, id:{$0}',
 	[ErrorCode.UserUnavailable]: '该账号不可用',
 	[ErrorCode.UserOrPsw]: '账号或密码错误',
+	[ErrorCode.CaptchaInvalid]: '验证码已过期',
+	[ErrorCode.CaptchaError]: '验证码错误',
 };

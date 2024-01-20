@@ -1,4 +1,4 @@
-import { Controller, Post, Body, SetMetadata, UseGuards, Res, Get } from '@nestjs/common';
+import { Controller, Post, Body, SetMetadata, UseGuards, Res, Get, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { UserService } from './user.service';
 import { CreateUserDto, LoginResultDto, LoginUserDto, PartialUser, SessionDto } from './dto/create-user.dto';
@@ -45,8 +45,8 @@ export class UserController {
 	}
 
 	@Get('captcha')
-	async captcha(@Res() res: Response) {
-		const captcha_data = await this.userService.captcha();
+	async captcha(@Query() param: { sid: string }, @Res() res: Response) {
+		const captcha_data = await this.userService.captcha(param);
 		res.end(
 			JSON.stringify({
 				data: captcha_data,

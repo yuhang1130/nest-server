@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { UserEntity } from '../entities/user.entity';
 
-export class LoginUserDto {
+export class UserBaseDto {
 	@IsString()
 	@IsNotEmpty()
 	user_name: string;
@@ -11,7 +11,17 @@ export class LoginUserDto {
 	pass_word: string;
 }
 
-export class CreateUserDto extends LoginUserDto {
+export class LoginUserDto extends UserBaseDto {
+	@IsString()
+	@IsNotEmpty()
+	code: string;
+
+	@IsString()
+	@IsNotEmpty()
+	sid: string;
+}
+
+export class CreateUserDto extends UserBaseDto {
 	@IsString()
 	@IsNotEmpty()
 	phone: string;
@@ -22,8 +32,10 @@ export class CreateUserDto extends LoginUserDto {
 }
 
 export class LoginResultDto {
-	state: boolean;
-	token: string;
+	code: number = 0;
+	data: {
+		token: string;
+	}
 }
 
 export type PartialUser = Pick<UserEntity, 'user_name' | 'phone' | 'is_admin' | 'email'>;

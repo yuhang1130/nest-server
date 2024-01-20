@@ -10,6 +10,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { RedisSdk } from './database/redis';
 import { JwtParseMiddleware } from './middleware/jwt-parse/jwt-parse.middleware';
 import { AuthService } from './auth/auth.service';
+import { TransformInterceptor } from './interceptor/transform/transform.interceptor';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, {
@@ -28,16 +29,14 @@ async function bootstrap() {
 	const configService = app.get(ConfigService);
 	app.use(JwtParseMiddleware(app.get(AuthService), AppModule.SessionName));
 	app.use(Session(app.get(RedisSdk), configService, AppModule.SessionName));
-	// app.useGlobalInterceptors(new TransformInterceptor());
+	app.useGlobalInterceptors(new TransformInterceptor());
 	app.useGlobalPipes(
 		new ValidationPipe({
 			transform: true,
 			whitelist: true,
-			validationError: { target: false }
+			validationError: { target: false },
 		}),
 	);
-
-
 	const port = configService.get('port');
 	await app.listen(port).then(() => {
 		console.log(`Server Start: http://localhost:${port}`);

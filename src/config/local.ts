@@ -1,6 +1,6 @@
 export default () => ({
 	env: process.env.DEPLOY_ENV || 'local',
-	port: process.env.PORT || 9090,
+	port: process.env.PORT || 9091,
 	jwt: {
 		secret:
 			process.env.JWT_SECRET ||
