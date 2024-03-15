@@ -23,6 +23,7 @@ services:
       - MYSQL_PASSWORD=mysql123
       # 设置默认的身份验证插件为 mysql_native_password
       - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
+      - TZ=Asia/Shanghai  # 解决容器 时区的问题
     ports:
       - "3306:3306" # 本机端口:容器端口
     volumes:
