@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
-import { Connection, EntityMetadata, EntityTarget, FindManyOptions, FindOneOptions } from 'typeorm';
+import { Connection, EntityMetadata, EntityTarget, FindManyOptions, FindOneOptions, QueryRunner, SelectQueryBuilder } from 'typeorm';
 import { SessionDto } from '../middleware/session-store/session-dto';
 import { Repository } from 'typeorm/repository/Repository';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
@@ -36,7 +36,7 @@ export class Mysql implements OnApplicationShutdown {
 		return this.connection.manager;
 	}
 
-	public async create<T extends BaseEntity>(entity: EntityTarget<T>, options?: DeepPartial<T>): Promise<T> {
+	public create<T extends BaseEntity>(entity: EntityTarget<T>, options?: DeepPartial<T>): T {
 		const manager = this.GetManager();
 		return manager.create(entity, options);
 	}
@@ -79,4 +79,9 @@ export class Mysql implements OnApplicationShutdown {
 		const manager = this.GetManager();
 		return manager.remove(entity);
 	}
+
+	CreateQueryBuilder<T extends BaseEntity>(entity: EntityTarget<T>, alias: string, queryRunner?: QueryRunner): SelectQueryBuilder<T> {
+    const manager = this.GetManager();
+    return manager.createQueryBuilder(entity, alias, queryRunner);
+  }
 }
