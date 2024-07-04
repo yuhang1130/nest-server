@@ -1,28 +1,26 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable, Logger } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 
 export interface AuthJwtToken {
-	id: string;
+  id: string;
 }
 
 @Injectable()
 export class AuthService {
-	logger = new Logger(AuthService.name);
-	constructor(
-		private jwtService: JwtService
-	) {}
+  logger = new Logger(AuthService.name);
+  constructor(private jwtService: JwtService) {}
 
-	signIn(payload: AuthJwtToken): string {
-		return this.jwtService.sign(payload);
-	}
+  signIn(payload: AuthJwtToken): string {
+    return this.jwtService.sign(payload);
+  }
 
-	decode(token: string): AuthJwtToken|null {
-		try {
-			return this.jwtService.decode(token) as AuthJwtToken|null;
-		} catch (e) {
-			this.logger.error(JSON.stringify(e));
-		}
+  decode(token: string): AuthJwtToken | null {
+    try {
+      return this.jwtService.decode(token) as AuthJwtToken | null;
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+    }
 
-		return null;
-	}
+    return null;
+  }
 }

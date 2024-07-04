@@ -1,3 +1,1 @@
-export const SkipLogController = [
-	'deploy',
-];
+export const SkipLogController = ["deploy"];

@@ -1,4 +1,4 @@
-version: "1.0"
+version: "2.27"
 
 services:
   # docker容器启动的redis默认是没有redis.conf的配置文件，所以用docker启动redis之前，需要先去官网下载redis.conf的配置文件
@@ -6,7 +6,7 @@ services:
     image: redis:7.0 # 使用官方镜像
     container_name: redis_container # 容器名称
     ports:
-      - "6379:6379" # 本机端口:容器端口
+      - "6389:6379" # 本机端口:容器端口
     volumes:
       - redis_data:/data # 数据卷，持久化Redis数据
     restart: on-failure # 自动重启
@@ -25,7 +25,7 @@ services:
       - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
       - TZ=Asia/Shanghai  # 解决容器 时区的问题
     ports:
-      - "3306:3306" # 本机端口:容器端口
+      - "3309:3306" # 本机端口:容器端口
     volumes:
       - mysql_data:/var/lib/mysql # 数据卷，持久化MySQL数据
     restart: on-failure
@@ -48,11 +48,11 @@ services:
       - PORT=9090
       - JWT_SECRET=a77xkDuRx@myydrkT7EXvdCjLnWcUsY*JY4BJbPPR
       - REDIS_HOST=redis_container # 通过容器名去访问
-      - REDIS_PORT=6379
+      - REDIS_PORT=6389
       - REDIS_PWD=
       - REDIS_DB=0
       - MYSQL_HOST=mysql_container # 通过容器名去访问
-      - MYSQL_PORT=3306
+      - MYSQL_PORT=3309
       - MYSQL_USER=mysqlName
       - MYSQL_PWD=mysql123
       - MYSQL_DB=hh
