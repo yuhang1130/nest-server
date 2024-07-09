@@ -35,9 +35,7 @@ implements NestInterceptor<T, Response<T>> {
     return next.handle().pipe(
       map((data) => {
         if (!SkipLogController.includes(controller)) {
-          const logFormat = `Response Data RequestId: ${requestId}; IP: ${ip}; Response data: ${JSON.stringify(
-            data,
-          )}`;
+          const logFormat = `Response Data RequestId: ${requestId}; IP: ${ip}; Response data: ${JSON.stringify(data)}`;
           Logger.log(logFormat);
         }
 

@@ -11,31 +11,31 @@ import {
   EntityTarget,
   FindManyOptions,
   FindOneOptions,
+  MongoEntityManager,
+  MongoRepository,
   QueryRunner,
   SelectQueryBuilder,
 } from "typeorm";
 import { SessionDto } from "../middleware/session-store/session-dto";
-import { Repository } from "typeorm/repository/Repository";
-import { EntityManager } from "typeorm/entity-manager/EntityManager";
 import { BaseEntity } from "./baseEntities/base";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { DeepPartial } from "typeorm/common/DeepPartial";
 
 @Injectable()
-export class Mysql implements OnApplicationShutdown {
-  logger = new Logger(Mysql.name);
+export class Mongo implements OnApplicationShutdown {
+  logger = new Logger(Mongo.name);
   onApplicationShutdown() {
-    this.logger.log("Application Showdown; Mysql Close");
+    this.logger.log("Application Showdown; Mongo Close");
     if (this.connection?.destroy) {
       this.connection.destroy();
     }
   }
 
-  constructor(@Inject("MYSQL_CONNECTION") readonly connection: DataSource) {}
+  constructor(@Inject("MONGO_CONNECTION") readonly connection: DataSource) {}
 
-  GetModel<T extends BaseEntity>(entity: new () => T): Repository<T> {
-    return this.connection.getRepository(entity);
+  GetModel<T extends BaseEntity>(entity: new () => T): MongoRepository<T> {
+    return this.connection.getMongoRepository(entity);
   }
 
   getMetadata<T extends BaseEntity>(target: EntityTarget<T>): EntityMetadata {
@@ -46,8 +46,8 @@ export class Mysql implements OnApplicationShutdown {
     return this.getMetadata(target).tableName;
   }
 
-  GetManager(): EntityManager {
-    return this.connection.manager;
+  GetManager(): MongoEntityManager {
+    return this.connection.mongoManager;
   }
 
   public create<T extends BaseEntity>(entity: EntityTarget<T>, options?: DeepPartial<T>): T {
@@ -88,7 +88,7 @@ export class Mysql implements OnApplicationShutdown {
     return this.GetManager().remove(entity, options);
   }
 
-  async delete<T extends BaseEntity>(entity: new () => T, options: FindOneOptions<T>): Promise<DeleteResult> {
+  async delete<T extends BaseEntity>(entity: new () => T, options: any): Promise<DeleteResult> {
     return this.GetManager().delete(entity, options);
   }
 

@@ -1,5 +1,3 @@
-version: "2.27"
-
 services:
   # docker容器启动的redis默认是没有redis.conf的配置文件，所以用docker启动redis之前，需要先去官网下载redis.conf的配置文件
   redis_server: # 服务名称
@@ -32,6 +30,19 @@ services:
     # 修改mysql8.x的加密身份连接方式(caching_sha2_password),兼容许多旧的连接工具不支持
 #    command: --default-authentication-plugin=mysql_native_password
 
+  mongo_server: # 服务名称
+    image: mongo:4.4.10
+    container_name: mongo_container
+    restart: on-failure
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mongo123
+      - TZ=Asia/Shanghai  # 解决容器 时区的问题
+    ports:
+      - 27019:27017 # 本机端口:容器端口
+    volumes:
+      - mongodb_data:/data/db
+
   nest_server: # nestjs服务
     container_name: nest_container
     depends_on: # 依赖于redis和mysql，在启动本服务之前会先启动依赖的服务
@@ -60,4 +71,5 @@ services:
 # 定义数据卷
 volumes:
   mysql_data: # MySQL数据卷
+  mongodb_data: # MongoDB数据卷
   redis_data: # Redis数据卷

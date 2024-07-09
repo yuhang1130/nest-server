@@ -6,6 +6,7 @@ import { Redis } from "ioredis";
 import { DataSource } from "typeorm";
 import { MysqlConnectionOptions } from "typeorm/driver/mysql/MysqlConnectionOptions";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { MongoConnectionOptions } from "typeorm/driver/mongodb/MongoConnectionOptions";
 
 const logger = new Logger("databaseProvider");
 
@@ -34,6 +35,37 @@ export const MysqlProvider = {
       return dataSource;
     } catch (e) {
       logger.error("MYSQL Connect Error: " + e.message);
+    }
+
+    return null;
+  },
+};
+
+export const MongoProvider = {
+  inject: [ConfigService],
+  provide: "MONGO_CONNECTION",
+  useFactory: async (config: ConfigService): Promise<DataSource> => {
+    try {
+      const mysqlConf = config.get("mongo", {});
+      const connectConf: MongoConnectionOptions = {
+        ...mysqlConf,
+        authSource: "admin",
+        type: "mongodb",
+        entities: [__dirname + "/../**/**/*.entity{.ts,.js}"],
+        synchronize: isLocal,
+        namingStrategy: new SnakeNamingStrategy(), // 自动将实体表字段名驼峰转下划线
+      };
+      logger.log(`连接mongo: ${JSON.stringify(connectConf)}`);
+      const dataSource = new DataSource(connectConf);
+      await dataSource.initialize();
+      if (dataSource.isInitialized) {
+        logger.log("MONGO Connect Success");
+      } else {
+        logger.error("MONGO Connect Error");
+      }
+      return dataSource;
+    } catch (e) {
+      logger.error("MONGO Connect Error: " + e.message);
     }
 
     return null;

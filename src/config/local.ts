@@ -21,6 +21,13 @@ export default () => ({
     password: process.env.MYSQL_PWD || "mysql123",
     database: process.env.MYSQL_DB || "hh",
   },
+  mongo: {
+    host: process.env.MONGO_HOST || "localhost",
+    port: process.env.MONGO_PORT || 27019,
+    username: process.env.MONGO_USER || "root",
+    password: process.env.MONGO_PWD || "mongo123",
+    database: process.env.MONGO_DB || "hh",
+  },
   redisPrefix: process.env.REDIS_PREFIX || "nest_template",
   svcNotLimit: process.env.SVC_NOT_LIMIT || 1,
   svcHosts: process.env.SVC_HOSTS || [],
