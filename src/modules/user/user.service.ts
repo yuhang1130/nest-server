@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import {
   CreateUserDto,
   LoginUserDto,
@@ -20,6 +20,7 @@ import { AuthService } from "../../auth/auth.service";
 import { UserNamespace } from "../../constants/user-constant";
 import * as svgCaptcha from "svg-captcha";
 import { RedisSdk } from "../../database/redis";
+import { Logger } from "../../logger/logger";
 
 @Injectable()
 export class UserService {

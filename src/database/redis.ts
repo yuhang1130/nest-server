@@ -24,7 +24,8 @@ export class RedisSdk implements BeforeApplicationShutdown {
 
   async beforeApplicationShutdown() {
     this.logger.warn(
-      `beforeApplicationShutdown RedisSdk Start Remove The Lock: ${this?.lockers?.length}`,
+      "beforeApplicationShutdown RedisSdk Start Remove The Lock: %d",
+      this?.lockers?.length
     );
   }
 

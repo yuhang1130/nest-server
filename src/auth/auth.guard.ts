@@ -3,7 +3,6 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
-  Logger,
 } from "@nestjs/common";
 import { CustomRequest } from "../middleware/session-store/session-dto";
 import { IsAdmin, IsSvc, UserNamespace } from "../constants/user-constant";
@@ -12,6 +11,7 @@ import { ConfigService } from "@nestjs/config";
 import { ErrorCode, ErrorMessage } from "../constants/errorCode-constant";
 import { CustomException } from "../exceptions/custom.exception";
 import { SessionDto } from "../modules/user/user.dto";
+import { Logger } from "../logger/logger";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
       ) {
         return true;
       } else {
-        this.logger.warn(`AccessDenied Hostname: ${request.hostname}`);
+        this.logger.warn("AccessDenied Hostname: %s", request.hostname);
         throw new ForbiddenException({
           statusCode: 403,
           code: ErrorCode.AccessDenied,

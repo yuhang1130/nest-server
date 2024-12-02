@@ -29,7 +29,7 @@ module.exports = {
     'no-unused-vars': 0, // 未使用的变量会发出警告
     'no-undef': 2, // 未定义的变量会发出错误 0 = off, 1 = warn, 2 = error
     'eqeqeq': ['warn', 'always'], // 要求使用 === 和 !==
-    'quotes': ['error', 'double'], // 要求使用单引号
+    'quotes': ['error', false], // 要求使用单引号
     'indent': ['warn', 2], // 缩进使用 2 个空格
     'semi': ['error', 'always'], // 要求语句末尾使用分号
     'brace-style': ['error', '1tbs'], // 要求使用一致的大括号风格

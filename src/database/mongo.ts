@@ -1,7 +1,6 @@
 import {
   Inject,
   Injectable,
-  Logger,
   OnApplicationShutdown,
 } from "@nestjs/common";
 import {
@@ -21,12 +20,13 @@ import { BaseEntity } from "./baseEntities/base";
 import { UpdateResult } from "typeorm/query-builder/result/UpdateResult";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { DeepPartial } from "typeorm/common/DeepPartial";
+import { Logger } from "../logger/logger";
 
 @Injectable()
 export class Mongo implements OnApplicationShutdown {
   logger = new Logger(Mongo.name);
   onApplicationShutdown() {
-    this.logger.log("Application Showdown; Mongo Close");
+    this.logger.info("Application Showdown; Mongo Close");
     if (this.connection?.destroy) {
       this.connection.destroy();
     }

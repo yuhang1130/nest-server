@@ -2,10 +2,10 @@ import {
   Controller,
   Get,
   Inject,
-  Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { Redis } from "ioredis";
+import { Logger } from "../../logger/logger";
 
 const MAX_FAIL_HEALTH = 10;
 

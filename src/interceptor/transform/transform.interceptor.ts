@@ -2,7 +2,6 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
-  Logger,
   NestInterceptor,
 } from "@nestjs/common";
 import { Observable } from "rxjs";
@@ -12,6 +11,7 @@ import {
   AlsGetRequestIp,
 } from "src/async-storage/async-storage";
 import { SkipLogController } from "src/constants/system-constant";
+import { Logger } from "../../logger/logger";
 
 export interface Response<T> {
   code: number;
@@ -20,8 +20,8 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-implements NestInterceptor<T, Response<T>> {
+export class TransformInterceptor<T>implements NestInterceptor<T, Response<T>> {
+  logger = new Logger(TransformInterceptor.name);
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -35,8 +35,7 @@ implements NestInterceptor<T, Response<T>> {
     return next.handle().pipe(
       map((data) => {
         if (!SkipLogController.includes(controller)) {
-          const logFormat = `Response Data RequestId: ${requestId}; IP: ${ip}; Response data: ${JSON.stringify(data)}`;
-          Logger.log(logFormat);
+          this.logger.info("Response Data RequestId: %s; IP: %s; Response data: %j",requestId, ip, data);
         }
 
         // 对列表接口字段做转换

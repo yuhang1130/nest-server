@@ -1,5 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { Logger } from "../logger/logger";
 
 export interface AuthJwtToken {
   id: string;
@@ -18,7 +19,7 @@ export class AuthService {
     try {
       return this.jwtService.decode(token) as AuthJwtToken | null;
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error("decode error. msg: %s", e?.message);
     }
 
     return null;

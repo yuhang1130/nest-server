@@ -6,18 +6,19 @@ import * as compression from "compression";
 import helmet from "helmet";
 import * as bodyParser from "body-parser";
 import Session from "./middleware/session-store/session-store.middleware";
-import { Logger, ValidationPipe } from "@nestjs/common";
+import { ValidationPipe } from "@nestjs/common";
 import { RedisSdk } from "./database/redis";
 import { JwtParseMiddleware } from "./middleware/jwt-parse/jwt-parse.middleware";
 import { AuthService } from "./auth/auth.service";
 import { TransformInterceptor } from "./interceptor/transform/transform.interceptor";
+import { Logger } from "./logger/logger";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     // logger:
-    // 	+process.env.DEBUG || process.env.ENV_FLAG === 'local'
-    // 		? ['log', 'error', 'warn', 'debug']
-    // 		: ['error', 'warn'],
+    // 	+process.env.DEBUG || process.env.ENV_FLAG === "local"
+    // 		? ["log", "error", "warn", "debug"]
+    // 		: ["error", "warn"],
   });
   app.enableShutdownHooks();
   app.enableCors();
@@ -42,8 +43,8 @@ async function bootstrap(): Promise<void> {
   );
   const port = configService.get("port");
   await app.listen(port).then(() => {
-    const logger = new Logger("NestApplication");
-    logger.log(`Server Start: http://localhost:${port}`);
+    const logger = new Logger(AppModule.name);
+    logger.info(`Server Start: http://localhost:${port}`);
   });
 }
 bootstrap().then();

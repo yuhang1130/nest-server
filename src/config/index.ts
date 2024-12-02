@@ -3,6 +3,8 @@ import prod from "./prod";
 import test from "./test";
 export const deployEnv = process.env.DEPLOY_ENV || "local";
 export const isLocal = deployEnv === "local";
+export const isProd = deployEnv === "isProd";
+export const logLevel = process.env.LOG_LEVEL || "";
 
 let envConfig: any;
 switch (deployEnv) {
