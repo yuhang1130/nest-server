@@ -4,31 +4,31 @@ import { UserEntity } from "./entities/user.entity";
 export class UserBaseDto {
   @IsString()
   @IsNotEmpty()
-    userName: string;
+  userName: string;
 
   @IsString()
   @IsNotEmpty()
-    passWord: string;
+  password: string;
 }
 
 export class LoginUserDto extends UserBaseDto {
   @IsString()
   @IsNotEmpty()
-    code: string;
+  code: string;
 
   @IsString()
   @IsNotEmpty()
-    sid: string;
+  sid: string;
 }
 
 export class CreateUserDto extends UserBaseDto {
   @IsString()
   @IsNotEmpty()
-    phone: string;
+  phone: string;
 
   @IsString()
   @IsNotEmpty()
-    email: string;
+  email: string;
 }
 
 export type PartialUser = Pick<

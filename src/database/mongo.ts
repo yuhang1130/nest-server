@@ -58,9 +58,9 @@ export class Mongo implements OnApplicationShutdown {
     const isNew = !entity.id;
     if (UserSession) {
       if (isNew) {
-        entity.createUserId = UserSession.OpUserId || UserSession.UserId;
+        entity.createdBy = UserSession.OpUserId || UserSession.UserId;
       } else {
-        entity.updateUserId = UserSession.OpUserId || UserSession.UserId;
+        entity.updatedBy = UserSession.OpUserId || UserSession.UserId;
       }
     }
 

@@ -4,11 +4,12 @@ import { ConfigModule } from "@nestjs/config";
 import { Mysql } from "./mysql";
 import { RedisSdk } from "./redis";
 import { Mongo } from "./mongo";
+import { EntitySubscriber } from "./entitySubscriber";
 
-@Global()
+
 @Module({
   imports: [ConfigModule],
-  providers: [MysqlProvider, MongoProvider, RedisProvider, Mysql, Mongo, RedisSdk],
+  providers: [MysqlProvider, MongoProvider, RedisProvider, Mysql, Mongo, RedisSdk, EntitySubscriber],
   exports: [MysqlProvider, MongoProvider, RedisProvider, Mysql, Mongo, RedisSdk],
 })
 export class DatabaseModule {}

@@ -11,9 +11,11 @@ import { config } from "./config";
 import { DeployModule } from "./modules/deploy/deploy.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
+import { GlobalModule } from "./global.module";
 
 @Module({
   imports: [
+    GlobalModule,
     ConfigModule.forRoot({ load: [config] }),
     DatabaseModule,
     DeployModule,

@@ -15,6 +15,9 @@ type SetInterface = (
   opts: { ttl?: number; reset?: boolean },
 ) => Promise<string | number>;
 type GetInterface = (key: string) => Promise<string | null>;
+type InCrInterface = (key: string, opts: {ttl?: number, reset?: boolean, increment?: number}) =>  Promise<number>;
+type SetWithNoTTLInterface =  (key: string, value: string) =>  Promise<string|number>;
+type ExistsInterface = (key: string) =>  Promise<number>;
 
 @Injectable()
 export class RedisSdk implements BeforeApplicationShutdown {
@@ -196,7 +199,46 @@ export class RedisSdk implements BeforeApplicationShutdown {
     return this.client.expire(key, ttl);
   }
 
+  private async InCr(prefix: string, key: string, opts: {ttl?: number, reset?: boolean, increment?: number}): Promise<number> {
+    const k = prefix + key;
+    if (opts?.reset) {
+      await this.client.del(k);
+      return 0;
+    }
+    
+    let v;
+    if (opts?.increment) {
+      v = await this.client.incrby(k, opts.increment);
+    } else {
+      v = await this.client.incr(k);
+    }
+    
+    if (opts?.ttl && v === 1) {
+      this.client.expire(k, opts?.ttl);
+    }
+    
+    return v;
+  }
+
+  private async SetWithNoTTL(prefix: string, key: string, v: string) {
+    const k = prefix + key;
+    return await this.client.set(k, v);
+  }
+
+  private async Exists(prefix: string, key: string): Promise<number> {
+    const k = prefix + key;
+    return await this.client.exists(k);
+  }
+
+  // 图形验证码
   SetCaptcha: SetInterface = this.Set.bind(this, RedisSdkKey.CaptchaPrefix);
   GetCaptcha: GetInterface = this.Get.bind(this, RedisSdkKey.CaptchaPrefix);
   DelCaptcha: DelInterface = this.Del.bind(this, RedisSdkKey.CaptchaPrefix);
+
+  // 自增ID
+  IncIdCounter: InCrInterface = this.InCr.bind(this, RedisSdkKey.IdCounter);
+  SetIdCounter: SetWithNoTTLInterface = this.SetWithNoTTL.bind(this, RedisSdkKey.IdCounter)
+  IdCounterExists: ExistsInterface = this.Exists.bind(this, RedisSdkKey.IdCounter);
+  DelIdCounter: DelInterface = this.Del.bind(this, RedisSdkKey.IdCounter);
+  GetIdCounter: GetInterface = this.Get.bind(this, RedisSdkKey.IdCounter);
 }

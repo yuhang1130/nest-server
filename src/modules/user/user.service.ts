@@ -39,8 +39,8 @@ export class UserService {
     }
 
     const salt = bcrypt.genSaltSync(12);
-    data.passWord = bcrypt.hashSync(data.passWord, salt);
-    const userData = _.pick(data, ["userName", "passWord", "phone", "email"]);
+    data.password = bcrypt.hashSync(data.password, salt);
+    const userData = _.pick(data, ["userName", "password", "phone", "email"]);
     const newUser = this.mysql.create(UserEntity, {
       ...userData,
       salt,
@@ -48,7 +48,7 @@ export class UserService {
     });
 
     await this.mysql.save(newUser);
-    return _.omit(newUser, ["passWord", "salt"]) as UserEntity;
+    return _.omit(newUser, ["password", "salt"]) as UserEntity;
   }
 
   async login(data: LoginUserDto): Promise<{ token: string }> {
@@ -67,7 +67,7 @@ export class UserService {
       throw new CustomException(ErrorCode.UserNotExist);
     }
 
-    const match = bcrypt.compareSync(data.passWord, existUser.passWord);
+    const match = bcrypt.compareSync(data.password, existUser.password);
     if (!match) {
       throw new CustomException(ErrorCode.UserOrPsw);
     }
@@ -113,6 +113,9 @@ export class UserService {
   }
 
   async captcha(data: { sid: string }) {
+    if (!data.sid) {
+      throw new CustomException(ErrorCode.UserParam, "", ["sid"]);
+    }
     const captcha = svgCaptcha.create({
       size: 4, // 个数
       height: 50,
