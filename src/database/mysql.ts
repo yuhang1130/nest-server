@@ -10,10 +10,10 @@ import {
   EntityTarget,
   FindManyOptions,
   FindOneOptions,
+  FindOptionsWhere,
   QueryRunner,
   SelectQueryBuilder,
 } from "typeorm";
-import { SessionDto } from "../middleware/session-store/session-dto";
 import { Repository } from "typeorm/repository/Repository";
 import { EntityManager } from "typeorm/entity-manager/EntityManager";
 import { BaseEntity } from "./baseEntities/base";
@@ -23,8 +23,8 @@ import { DeepPartial } from "typeorm/common/DeepPartial";
 import { Logger } from "../logger/logger";
 
 @Injectable()
-export class Mysql implements OnApplicationShutdown {
-  logger = new Logger(Mysql.name);
+export class MysqlService implements OnApplicationShutdown {
+  logger = new Logger(MysqlService.name);
   onApplicationShutdown() {
     this.logger.info("Application Showdown; Mysql Close");
     if (this.connection?.destroy) {
@@ -54,22 +54,17 @@ export class Mysql implements OnApplicationShutdown {
     return this.GetManager().create(entity, options);
   }
 
-  public async save<T extends BaseEntity>(entity: T, UserSession?: SessionDto): Promise<T> {
-    const isNew = !entity.id;
-    if (UserSession) {
-      if (isNew) {
-        entity.createdBy = UserSession.OpUserId || UserSession.UserId;
-      } else {
-        entity.updatedBy = UserSession.OpUserId || UserSession.UserId;
-      }
-    }
-
+  public async save<T extends BaseEntity>(entity: T): Promise<T> {
     return this.GetManager().save(entity);
   }
 
   // 提供简单的API
   public async findOne<T extends BaseEntity>(entity: new () => T, options: FindOneOptions<T>): Promise<T> {
     return this.GetManager().findOne(entity, options);
+  }
+
+  async findOneBy<T>(entity: new () => T, options: FindOptionsWhere<T> | FindOptionsWhere<T>[]): Promise<T> {
+    return this.GetManager().findOneBy(entity, options);
   }
 
   public async find<T extends BaseEntity>(entity: new () => T, options: FindManyOptions<T>): Promise<T[]> {

@@ -10,7 +10,7 @@ import { CustomException } from "../../exceptions/custom.exception";
 import { ErrorCode } from "../../constants/errorCode-constant";
 import * as bcrypt from "bcryptjs";
 import * as _ from "lodash";
-import { Mysql } from "../../database/mysql";
+import { MysqlService } from "../../database/mysql";
 import { ENTITY_STATUS } from "../../constants/entities-constant";
 import {
   AlsGetRequest,
@@ -27,7 +27,7 @@ export class UserService {
   logger = new Logger(UserService.name);
   constructor(
     readonly auth: AuthService,
-    readonly mysql: Mysql,
+    readonly mysql: MysqlService,
     readonly redisSdk: RedisSdk,
   ) {}
 

@@ -23,8 +23,8 @@ import { DeepPartial } from "typeorm/common/DeepPartial";
 import { Logger } from "../logger/logger";
 
 @Injectable()
-export class Mongo implements OnApplicationShutdown {
-  logger = new Logger(Mongo.name);
+export class MongoService implements OnApplicationShutdown {
+  logger = new Logger(MongoService.name);
   onApplicationShutdown() {
     this.logger.info("Application Showdown; Mongo Close");
     if (this.connection?.destroy) {

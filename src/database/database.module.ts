@@ -1,15 +1,15 @@
-import { Global, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { MongoProvider, MysqlProvider, RedisProvider } from "./databas.provider";
 import { ConfigModule } from "@nestjs/config";
-import { Mysql } from "./mysql";
+import { MysqlService } from "./mysql";
 import { RedisSdk } from "./redis";
-import { Mongo } from "./mongo";
+import { MongoService } from "./mongo";
 import { EntitySubscriber } from "./entitySubscriber";
 
 
 @Module({
   imports: [ConfigModule],
-  providers: [MysqlProvider, MongoProvider, RedisProvider, Mysql, Mongo, RedisSdk, EntitySubscriber],
-  exports: [MysqlProvider, MongoProvider, RedisProvider, Mysql, Mongo, RedisSdk],
+  providers: [MysqlProvider, MongoProvider, RedisProvider, MysqlService, MongoService, RedisSdk, EntitySubscriber],
+  exports: [MysqlProvider, MongoProvider, RedisProvider, MysqlService, MongoService, RedisSdk],
 })
 export class DatabaseModule {}
