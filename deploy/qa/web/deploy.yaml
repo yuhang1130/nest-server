@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nest-td-web            # 修改为项目的名字
+  namespace: td               # 修改为项目的组
+  labels:
+    app: nest-td-web          # 修改为项目的名字
+  annotations:
+    "sidecar.jaegertracing.io/inject": "true" # 需添加这个，告知Jaeger注入Jaeger Agent到Pod里面
+spec:
+  replicas: 4                 # 根据业务量调整pod的数量
+  selector:
+    matchLabels:
+      app: nest-td-web
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 20%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nest-td-web     # 修改成项目的名字
+      annotations:
+        prometheus.io/port: '3000'
+        prometheus.io/scrape: 'true'
+    spec:
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: pulluser
+      dnsConfig:
+        options:
+        - name: ndots
+          value: '2'
+      containers:
+      - image: <IMAGE>:<IMAGE_TAG>
+        name: nest-td-web         # 修改为项目的名字
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000     # 这个端口必须和Dockerfile暴露的一个样
+        readinessProbe:
+          httpGet:
+            path: /deploy/ready
+            port: 3000
+          initialDelaySeconds: 40
+          periodSeconds: 4
+          timeoutSeconds: 2
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /deploy/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 4
+          timeoutSeconds: 2
+          failureThreshold: 5
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo preStop; sleep 30; echo preStopOver;"]
+        args:
+        - "pm2-runtime"
+        - "start"
+        - "/data/www/projects/nest-server/pm2/ecosystem.config.js"
+        - "--only"
+        - "Web"
+        env:
+        - name: HEAP_DUMP
+          value: "0"
+        - name: NODE_OPTIONS
+          value: "--max_old_space_size=4096"
+        - name: NO_COLOR
+          value: "1"
+        - name: INSTANCES
+          value: "5"
+        - name: PROCESS_NAME
+          value: "td.web"
+        - name: REQ_LOG
+          value: "0"
+        - name: BOT_TOKEN
+          value: "MC45MzgzODEzMDk3MTg1OTQ5"
+        - name: LOG_LEVEL
+          value: "warn"
+        - name: DEBUG
+          value: "0"
+        - name: OTLP_COLLECTOR_ENDPOINT
+          value: "http://otel-collector.observability:4318/v1/traces"
+        - name: STATISTIC_CACHE_SECONDS
+          value: "60"
+        volumeMounts:
+          - name: td-media
+            mountPath: /data/media/
+        resources:
+          limits:
+            cpu: 3
+            memory: 3.0Gi
+          requests:
+            cpu: 0.7                # CPU要求0.5个
+            memory: 1.1G           # 内存要求1024Mi
+      volumes:
+        - name: td-media
+          persistentVolumeClaim:
+            claimName: td-media
