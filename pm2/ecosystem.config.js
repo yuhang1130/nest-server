@@ -12,6 +12,6 @@ module.exports = {
       watch: false,
       kill_timeout: 10e3,
       max_memory_restart: "4G",
-    },
+    }
   ],
 };
