@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nest-td-web         # 修改为 项目的名字
+  namespace: td            # 修改为项目的组
+spec:
+  selector:
+    app: nest-td-web        # 修改为项目的名字  
+  type:  ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80                # 这个是svc的端口，统一是80         
+    targetPort:  3000       # 这个是执行deploy的端口，和deploy定义的一样
