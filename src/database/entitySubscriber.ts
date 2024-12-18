@@ -3,11 +3,12 @@ import { IdCounter } from "../utils/IdCounter";
 import { DataSource, EntitySubscriberInterface, EventSubscriber, InsertEvent, RecoverEvent, RemoveEvent, SoftRemoveEvent, TransactionCommitEvent, TransactionRollbackEvent, TransactionStartEvent, UpdateEvent } from "typeorm"
 import * as dayjs from "dayjs";
 import { AlsGetUserSession } from "../async-storage/async-storage";
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 
 
 @EventSubscriber()
+@Injectable()
 export class EntitySubscriber implements EntitySubscriberInterface {
   logger = new Logger(EntitySubscriber.name);
 
