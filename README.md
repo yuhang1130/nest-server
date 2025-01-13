@@ -48,14 +48,14 @@ $ cd dist/script && node schedule-demo.js
 
 # jenkins安装一个多选框插件：<https://cloud.baidu.com/article/3291425>
 
-![alt text](image.png)
+![alt text](docs_images/image.png)
 
-![alt text](image-1.png)
+![alt text](docs_images/image-1.png)
 
-![alt text](image-2.png)
+![alt text](docs_images/image-2.png)
 
-![alt text](image-4.png)
+![alt text](docs_images/image-4.png)
 
-![alt text](image-5.png)
+![alt text](docs_images/image-5.png)
 
-![alt text](image-6.png)
+![alt text](docs_images/image-6.png)
