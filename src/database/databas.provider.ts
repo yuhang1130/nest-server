@@ -6,19 +6,20 @@ import { MysqlConnectionOptions } from "typeorm/driver/mysql/MysqlConnectionOpti
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { MongoConnectionOptions } from "typeorm/driver/mongodb/MongoConnectionOptions";
 import { Logger } from "../logger/logger";
+import { ConfigType } from "../config";
 
 const logger = new Logger("databaseProvider");
 
 export const MysqlProvider = {
   inject: [ConfigService],
   provide: "MYSQL_CONNECTION",
-  useFactory: async (config: ConfigService): Promise<DataSource> => {
+  useFactory: async (config: ConfigService<ConfigType>): Promise<DataSource> => {
     try {
-      const mysqlConf = config.get("mysql", {});
+      const mysqlUrl = config.get("mysqlUrl", {});
       const connectConf: MysqlConnectionOptions = {
-        ...mysqlConf,
+        url: mysqlUrl,
         type: "mysql",
-        entities: [__dirname + "/../**/**/*.entity{.ts,.js}"],
+        entities: [__dirname + "/../modules/**/*.entity{.ts,.js}"],
         synchronize: false,
         connectorPackage: "mysql2",
         namingStrategy: new SnakeNamingStrategy(), // 自动将实体表字段名驼峰转下划线
@@ -43,14 +44,15 @@ export const MysqlProvider = {
 export const MongoProvider = {
   inject: [ConfigService],
   provide: "MONGO_CONNECTION",
-  useFactory: async (config: ConfigService): Promise<DataSource> => {
+  useFactory: async (config: ConfigService<ConfigType>): Promise<DataSource> => {
     try {
-      const mysqlConf = config.get("mongo", {});
+      const mongoUrl = config.get("mongoUrl", {});
+
       const connectConf: MongoConnectionOptions = {
-        ...mysqlConf,
+        url: mongoUrl,
         authSource: "admin",
         type: "mongodb",
-        entities: [__dirname + "/../**/**/*.entity{.ts,.js}"],
+        entities: [__dirname + "/../modules/**/*.entity{.ts,.js}"],
         synchronize: false,
         namingStrategy: new SnakeNamingStrategy(), // 自动将实体表字段名驼峰转下划线
       };
@@ -74,7 +76,7 @@ export const MongoProvider = {
 export const RedisProvider = {
   inject: [ConfigService],
   provide: "REDIS_CONNECTION",
-  useFactory: (config: ConfigService) => {
+  useFactory: (config: ConfigService<ConfigType>) => {
     try {
       const redisConf = config.get("redis");
       logger.info("连接redis: %j", redisConf);
@@ -91,7 +93,10 @@ export const RedisProvider = {
         });
         return cluster;
       }
-      const redis = new Redis(redisConf);
+      const redis = new Redis(redisConf.url, {
+        password: redisConf.password || null,
+        db: redisConf.db,
+      });
       redis.on("error", (e) => {
         logger.error("Redis Error: %j", e);
       });

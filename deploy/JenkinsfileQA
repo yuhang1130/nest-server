@@ -1,0 +1,183 @@
+#!groovy
+
+// 共享库引用
+@Library('jenkins-lib') _
+
+// 获取共享库里面的包
+def tools = new org.devops.tools()
+def kube = new org.devops.kubernetes()
+
+String harborUrl = kube.getHarborUrl()
+String slaveYAML = kube.getSimpleYAML()
+// 完整的gitURL: git@github.com:yuhang1130/nest-server.git
+String gitUrl = scm.getUserRemoteConfigs()[0].getUrl()
+String scmCredentialsId = scm.getUserRemoteConfigs()[0].getCredentialsId()
+
+
+String envProxy = "${env.ENV_PROXY}"
+String k8sCredentialsId = 'project-k8s-cli-key'
+String image = "${harborUrl}/test/nest-server"
+String envFlag = "qa"
+
+echo envProxy
+echo image
+echo gitUrl
+echo envFlag
+
+// k8s yaml文件目录，相对于项目
+String k8sDirSuffix = "deploy/${envFlag}"
+// Dockerfile存放的位置，相对于项目
+String dockerDirSuffix = "deploy"
+// 默认分支
+String defaultBranch = "origin/master-qa"
+
+
+
+pipeline {
+  agent {
+    kubernetes {
+      yaml "${slaveYAML}"
+    }
+  }
+
+  options {
+    timestamps()  //日志会有时间
+    skipDefaultCheckout()  //删除隐式checkout scm语句
+    disableConcurrentBuilds()   //禁止并行构建
+    timeout(time: 1, unit: 'HOURS')   //流水线超时设置1h
+  }
+
+  parameters {
+    extendedChoice(
+      name: 'submodule',
+      description: '选择一个发布的子模块，可多选',
+      quoteValue: false,
+      multiSelectDelimiter: ',',
+      saveJSONParameterToFile: false,
+      type: 'PT_CHECKBOX',
+      value: '''web,
+                schedule''',
+      visibleItemCount: 20
+    )
+    gitParameter (
+      branch: '',
+      branchFilter: '.*',          //分支branch过滤条件
+      defaultValue: "${defaultBranch}",
+      description: '请选择构建的branch或者tag',
+      listSize: '10',
+      name: 'BRANCH_TAG',
+      quickFilterEnabled: false,
+      selectedValue: 'NONE',
+      sortMode: 'NONE',
+      tagFilter: 'v*',                         //tag过滤条件
+      type: 'PT_BRANCH_TAG'                   //插件参数类型
+    )
+    booleanParam (
+      defaultValue: false,
+      description: '是否跳过项目构建',
+      name: 'SKIP_BUILD'
+    )
+  }
+
+  environment {
+    // Dockerfile存放的位置，绝对路径
+    dockerDir = "${WORKSPACE}/${dockerDirSuffix}"
+    // k8s yaml文件目录，绝对路径
+    k8sDir = "${WORKSPACE}/${k8sDirSuffix}"
+  }
+
+  stages {
+    stage('checkout SCM') {
+      steps {
+        timeout(time:20, unit:"MINUTES") {
+          script {
+            tools.printMsg('checkout SCM', 'green')
+            checkout([$class: 'GitSCM', branches: [[name: "${BRANCH_TAG}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: "${scmCredentialsId}", url: "${gitUrl}"]]])
+            env.GIT_COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+            env.COMMIT_MSG = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+            if ( BRANCH_TAG ==~ /^origin.*/  ) {
+              env.imageTag = env.GIT_COMMIT
+            } else if ( BRANCH_TAG ==~ /^v.*/ ) {
+              env.imageTag = env.BRANCH_TAG
+            } else {
+              throw new Exception("choose branch_tag error")
+            }
+          }
+        }
+      }
+    }
+
+    stage('构建Docker镜像') {
+      when { not { expression { return params.SKIP_BUILD } } }
+      steps {
+        timeout(time:20, unit:"MINUTES") {
+          script {
+            tools.printMsg('构建Docker镜像', 'green')
+            dir("${WORKSPACE}") {
+                  container('kaniko') {
+                    sh """
+                      ENV_FLAG=${envFlag}
+                      /kaniko/executor --compressed-caching=false --build-arg ENV_FLAG=${envFlag} --build-arg https_proxy=${envProxy} --build-arg http_proxy=${envProxy} -c `pwd` --dockerfile ${dockerDir}/Dockerfile --cache=true --destination ${image}:${imageTag} --skip-tls-verify --ignore-path /busybox
+                    """
+                    for (item in submodule.tokenize(',')){
+                      sh """
+                        echo "FROM ${image}:${imageTag}" | \
+                        /kaniko/executor  --dockerfile /dev/stdin --destination ${image}-${item}:${imageTag}
+                        """
+                    }
+                  }
+            }
+          }
+        }
+      }
+    }
+
+    stage('发布到K8S') {
+      when { not { expression { return params.SKIP_APPLY } } }
+      steps {
+        timeout(time:20, unit:"MINUTES") {
+          script {
+            tools.printMsg('发布到K8S', 'green')
+            withKubeConfig([credentialsId: "${k8sCredentialsId}"]) {
+              container('kubectl') {
+                for (item in submodule.tokenize(',')){
+                  sh """
+                    sed -i 's#<IMAGE>#'"${image}-${item}"'#' ${k8sDir}/${item}/deploy.yaml
+                    sed -i 's#<IMAGE_TAG>#'"${imageTag}"'#' ${k8sDir}/${item}/deploy.yaml
+                    kubectl apply -f ${k8sDir}/${item}
+                  """
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      script {
+        println("always")
+      }
+    }
+
+    success {
+      script {
+        currentBuild.description = "branch_tag: ${BRANCH_TAG} \n commit_id : ${GIT_COMMIT} \n image_tag : ${imageTag} \n commit_msg: ${COMMIT_MSG}"
+      }
+    }
+
+    failure {
+      script {
+        currentBuild.description = "构建失败"
+      }
+    }
+
+    aborted {
+      script {
+        currentBuild.description = "构建取消"
+      }
+    }
+  }
+}

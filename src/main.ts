@@ -41,8 +41,8 @@ async function bootstrap(): Promise<void> {
       validationError: { target: false },
     }),
   );
-  const port = configService.get("port");
-  await app.listen(port).then(() => {
+  const port = configService.get("port") || 9090;
+  await app.listen(+port).then(() => {
     const logger = new Logger(AppModule.name);
     logger.info(`Server Start: http://localhost:${port}`);
   });

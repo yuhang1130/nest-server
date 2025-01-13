@@ -16,15 +16,17 @@ const MAX_FAIL_HEALTH = 12;
 export class DeployController {
   logger = new Logger(DeployController.name);
   mysqlFail = 0;
+  mongoFail = 0;
   redisFail = 0;
   constructor(
-    readonly mysql: MysqlService,
+    private readonly mysql: MysqlService,
+    private readonly mongo: MongoService,
     @Inject("REDIS_CONNECTION") readonly redisClient: Redis,
   ) {
   	setInterval(this.mysqlHealthCheck.bind(this), 5e3);
-  	setInterval(this.redisHealCheck.bind(this), 5e3);
+  	setInterval(this.mongoHealthCheck.bind(this), 5e3);
+  	setInterval(this.redisHealthCheck.bind(this), 5e3);
   }
-
 
   async mysqlHealthCheck() {
   	const timeout = new Promise(ok => {
@@ -52,7 +54,33 @@ export class DeployController {
   	}
   }
 
-  async redisHealCheck() {
+  async mongoHealthCheck() {
+  	const timeout = new Promise(ok => {
+  		setTimeout(() => {
+  			ok({ok: false});
+  		}, 3e3);
+  	});
+  	const mongoCheck = await Promise.race([
+      this.mongo.findOneBy(PingEntity,{}).then(() => ({ok: true})),
+  		timeout,
+  	]).catch(e => {
+  		this.logger.warn(`Mongo check error: ${e.message || JSON.stringify(e?.stack)}`, );
+  		return {ok: false};
+  	}) as any;
+  
+  	if (mongoCheck?.ok) {
+  		this.mongoFail = 0;
+  	}
+  	else {
+  		this.mongoFail ++;
+  		this.logger.warn(`MongoPing fail, count: ${this.mongoFail}`, );
+  		if (this.mongoFail > MAX_FAIL_HEALTH) {
+  			// process.exit(10001);
+  		}
+  	}
+  }
+
+  async redisHealthCheck() {
   	const timeout = new Promise(ok => {
   		setTimeout(() => {
   			ok({ok: false});

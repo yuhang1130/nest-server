@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nest-server
+  name: nest-server
+  namespace: socialflow
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: nest-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 20%
+      maxUnavailable: 20%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nest-server
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: pulluser
+      containers:
+      - image: <IMAGE>:<IMAGE_TAG>
+        name: nest-server
+        imagePullPolicy: IfNotPresent
+        args:
+        - pm2-runtime
+        - start
+        - /nest-server/pm2/ecosystem.config.js
+        - --only
+        - Web
+        env:
+        - name: DEPLOY_ENV
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: DEPLOY_ENV
+        - name: PORT
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: PORT
+        - name: MYSQL_URL
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: MYSQL_URL
+        - name: MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: MONGO_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: REDIS_URL
+        - name: REDIS_PWD
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: REDIS_PWD
+        - name: REDIS_DB
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: REDIS_DB
+        - name: REDIS_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: REDIS_PREFIX
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: JWT_SECRET
+        - name: INSTANCES
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: INSTANCES
+        - name: LOG_LEVEL
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: LOG_LEVEL
+        - name: NO_COLOR
+          valueFrom:
+            secretKeyRef:
+              name: cm-nest-server
+              key: NO_COLOR
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 20
+        ports:
+        - containerPort: 9090
+        livenessProbe:
+          httpGet:
+            path: /deploy/live
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /deploy/ready
+            port: 9090
+          initialDelaySeconds: 40
+          periodSeconds: 3
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 512Mi

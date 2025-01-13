@@ -21,6 +21,7 @@ import { UserNamespace } from "../../constants/user-constant";
 import * as svgCaptcha from "svg-captcha";
 import { RedisSdk } from "../../database/redis";
 import { Logger } from "../../logger/logger";
+import { Transactional } from "typeorm-transactional";
 
 @Injectable()
 export class UserService {
@@ -31,6 +32,7 @@ export class UserService {
     readonly redisSdk: RedisSdk,
   ) {}
 
+  @Transactional()
   async register(data: CreateUserDto): Promise<UserEntity> {
     data.userName = data.userName.trim();
     const existUser = await this.getUserByName(data.userName);

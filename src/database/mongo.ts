@@ -72,6 +72,10 @@ export class MongoService implements OnApplicationShutdown {
     return this.GetManager().findOne(entity, options);
   }
 
+  async findOneBy<T>(entity: new () => T, options: any): Promise<T> {
+      return this.GetManager().findOneBy(entity, options);
+    }
+
   public async find<T extends BaseEntity>(entity: new () => T, options: FindManyOptions<T>): Promise<T[]> {
     return this.GetManager().find(entity, options);
   }

@@ -1,7 +1,7 @@
-FROM node:20.10.0-alpine AS package-builder
+FROM node:22.12.0-alpine AS package-builder
 
-# 指定工作目录，没有就自动创建
-WORKDIR /app-server
+# 指定工作目录
+WORKDIR /nest-server
 
 #复制package到工作目录
 COPY package.json package-lock.json ./
@@ -17,9 +17,9 @@ COPY . .
 RUN npm run build
 
 # 再次使用基础镜像
-FROM node:20.10.0-alpine
+FROM node:22.12.0-alpine
 
-WORKDIR /app
+WORKDIR /nest-server
 ARG ENV_FLAG
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
@@ -32,9 +32,9 @@ RUN npm config set registry https://registry.npmmirror.com --global
 RUN npm install pm2@5.3.0 -g
 
 # 从package-builder阶段复制打包后的文件
-COPY --from=package-builder /app-server/node_modules /app-server/node_modules
-COPY --from=package-builder /app-server/dist /app-server/dist
-COPY ./pm2 /app-server/pm2
+COPY --from=package-builder /nest-server/node_modules /nest-server/node_modules
+COPY --from=package-builder /nest-server/dist /nest-server/dist
+COPY ./pm2 /nest-server/pm2
 
 #暴露端口9090（与服务启动端口一致）
 EXPOSE 9090
@@ -44,4 +44,4 @@ ENV PORT=9090
 ENV ENV_FLAG=${ENV_FLAG}
 
 # 启动服务
-CMD [ "pm2-runtime", "/app/pm2/ecosystem.config.js", "--only", "Web"]
+# CMD [ "pm2-runtime", "/app/pm2/ecosystem.config.js", "--only", "Web"]
